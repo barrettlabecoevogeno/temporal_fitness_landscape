@@ -14,6 +14,9 @@ id <- function(x) unique(sort(as.vector(unlist(x))))
 standardize <- function(x)
   (x-mean(x, na.rm=TRUE))/sd(x, na.rm=TRUE)
 
+## quick scale function
+sc.num <- function(x) as.numeric(scale(x))
+
 # Stats: mode -------------------------------------------------------------
 Mode <- function(x) {
   ux <- unique(x)
@@ -78,9 +81,9 @@ autopairs<-function(x, ...) {
 }
 
 
-known.state.cjs <- function(ch){
+known.state.cjs <- function(ch) {
   state <- ch
-  for (i in 1:dim(ch)[1]){
+  for(i in 1:dim(ch)[1]){
     n1 <- min(which(ch[i,]==1))
     n2 <- max(which(ch[i,]==1))
     state[i,n1:n2] <- 1
@@ -89,3 +92,5 @@ known.state.cjs <- function(ch){
   state[state==0] <- 0
   return(state)
 }
+
+
