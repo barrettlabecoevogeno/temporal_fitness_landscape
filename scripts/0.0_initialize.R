@@ -8,15 +8,14 @@
 ##########################################################################################
 
 # Load libraries ----------------------------------------------------------
-
 library(data.table)
-library(dplyr)
+library(tidyverse)
 library(lubridate)
 library(MASS)
 library(mgcv)
-library(tidyr)
 library(vegan)
-
+library(tidyr)
+library(ggplot2)
 
 # Source scripts ----------------------------------------------------------
 source('scripts/0.1_misc.R')
