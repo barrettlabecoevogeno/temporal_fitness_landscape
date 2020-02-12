@@ -18,7 +18,7 @@ library(tidyr)
 library(ggplot2)
 
 # Source scripts ----------------------------------------------------------
-source('./scripts/custom_PCA.R')
+source('scripts/custom_PCA.R')
 source('scripts/0.1_misc.R')
 
 # New dataset, or sorting informations ------------------------------------
@@ -100,6 +100,7 @@ datata = datata[-which(apply(is.na(datata[,c("MedianBeakLength", "MedianBeakWidt
 # data.find.na = apply(datata[,c("Tarsus", "Wing.Chord", "Mass")],2,function(x) which(is.na(x)))
 # datata.no.na = datata[-unique(unlist(data.find.na)),cols]
 
+
 # Recapture matrix --------------------------------------------------------
 recap = datata %>%  # Make a DB 
   group_by(Year) %>% # Group by year to count the captures in various years
@@ -109,9 +110,7 @@ recap = datata %>%  # Make a DB
   decostand(method = "pa") %>% # Make 0s and 1s
   as.data.frame.matrix()
 
-ch = c(#"y.1999","y.2001","y.2002",
-  "y.2003","y.2004","y.2005","y.2006", "y.2007","y.2008","y.2009","y.2010",
-  "y.2011","y.2012","y.2013","y.2014", "y.2015","y.2016", "y.2017","y.2018","y.2019")
+ch = paste('y', unique(sort(datata$Year)), sep='.')
 
 # rename the columns of the recapture history 
 colnames(recap) <- ch
@@ -127,6 +126,10 @@ recap$ch = tidyr::unite(data = recap[,ch],
                         col = ch, sep = "")
 # Creates column with the first instance of capture
 recap$first = apply(recap[,ch], 1, which.max) 
+## update "first" so that it correctly reflects selected years (other way of coding it )
+# recap$first <- apply(recap[,ch], 1, function(x) min(which(x==1)))
+
+cbind(test1,test2)
 # Creates column with the last instance of capture
 recap$last = apply(recap[,ch], 1, function(x) max(which(x==1))) 
 
@@ -143,6 +146,7 @@ ch.corr = known.state.cjs(datata2[,ch])
 
 # Make recapture history with one column name 
 datata2$X = as.matrix(datata2[,ch])
+datata2$X.corr = as.matrix(ch.corr)
 
 # Create variable that shows the APPARENT SURVIVAL 
 datata2$maxseen.corr = apply(ch.corr,1,sum)
@@ -155,7 +159,7 @@ cols = c("BANDFINAL", "BANDFINAL_Year", "Date", "Year","Site", "Sex0", "Species1
          "MedianBeakLength", "MedianBeakWidth","MedianBeakDepth")
 # Before computing the PCA, you should remove the duplicates 
 # But for the analysis of the fitness landscapes in various years, the duplicates will be reused 
-datata3 = (datata2[!duplicated(datata2$BANDFINAL), cols]) 
+datata3 = (datata2[!duplicated(datata2$BANDFINAL), ]) 
 
 # PCA Beak  ---------------------------------------------------------------
 # Calculate the PCA on Median Beak traits 
@@ -184,7 +188,9 @@ dim(datata3)# NO duplicated BANDFINAL
 
 # Generate output data ----------------------------------------------------
 bird.data = datata3 %>% droplevels()
-bird.sex = bird.data %>% droplevels()
+yr.list.subset = unique(sort(bird.data$Year))
+save(bird.data,yr.list.subset,file = "output/bird.data.RData")
+write.csv(bird.data,"output/bird.data.csv")
 
 table(bird.data$Species1,
       bird.data$Year)
