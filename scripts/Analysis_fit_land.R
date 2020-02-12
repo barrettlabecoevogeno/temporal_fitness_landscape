@@ -6,9 +6,7 @@
 # # # # # # # # # # # # # # # # # # # # 
 
 # Preparation of variables and data  --------------------------------------
-source('./scripts//initialize.R')
-source("./scripts/logit.r")
-source('./scripts/PCA_custom.R')
+source('scripts/0.0_initialize.R')
 load('./data/bird.data.RData', verbose=TRUE)
 
 # Select the variables to run the scripts ---------------------------------
