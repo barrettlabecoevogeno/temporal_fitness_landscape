@@ -7,19 +7,18 @@
 
 # Preparation of variables and data  --------------------------------------
 source('scripts/0.0_initialize.R')
-load('./data/bird.data.RData', verbose=TRUE)
+load('output/bird.data.RData', verbose=TRUE)
 
 # Select the variables to run the scripts ---------------------------------
 save.data = "./output/biotic.factors.on.survival_Andrew_meeting_changing_PCA_SCORE_for_only_fortis.RData"
 
-sp.list <- c('fortis')
-yr = c(2004:2014,2016:2018)
+sp.list <- c("fortis", "fuliginosa", "magnirostris","scandens")
+yr = yr.list.subset
 jump = 1
 site.list <- "El Garrapatero"
 
 pdf.output <- FALSE
 find.peaks.and.valleys = FALSE
-splines <- TRUE
 standard.ized = TRUE
 # If you want only the linear βX not the βx and γX^2
 linear.only = TRUE  
@@ -52,110 +51,10 @@ model.list = list()
 survived.list = list()
 
 # These were the relatively good values of lambda used 
-exp.lambda = exp(mean(c(-4,-5,-4,
-                        -4,-4,-4,
-                        -4,-4,-3,
-                        -6,-13,0)))
+exp.lambda = exp(mean(c(-4)))
 
 if(pdf.output){
-  pdf("./output/my.pca.just.fortis.pdf",height = 6,width = 15)
-  par(mfrow=c(1,3))
-  res.pca.for2 = vegan::rda(bird.data[bird.data$Species1=="fortis", 
-                                      c("MedianBeakLength", "MedianBeakWidth", 
-                                        "MedianBeakDepth")])
-  res.pca.for3 = vegan::rda(bird.data[bird.data$Species1=="fortis" & bird.data$Site=="El Garrapatero",
-                                      c("MedianBeakLength", "MedianBeakWidth", 
-                                        "MedianBeakDepth")])
-  bd.EG =  bird.data[bird.data$Site=="El Garrapatero",]
-  res.pca.all.sp.EG= vegan::rda(bd.EG[,c("MedianBeakLength", 
-                                         "MedianBeakWidth", 
-                                         "MedianBeakDepth")])
-  bd.EG =  bird.data[bird.data$Site=="El Garrapatero",]
-  res.pca.all.sp.EG= vegan::rda(bd.EG[,c("MedianBeakLength", 
-                                         "MedianBeakWidth", 
-                                         "MedianBeakDepth")])
-  
-  tab.sp.eg= table(bird.data[bird.data$Site=="El Garrapatero","Species1"], 
-                   bird.data[bird.data$Site=="El Garrapatero","Year"])
-  write.csv(tab.sp.eg,"./output/nb.sp.eg.csv")
-  
-  ores = mixtools::normalmixEM(bird.data[bird.data$Species1=="fortis","PC1"],
-                               sigma = NULL, 
-                               mean.constr = NULL, sd.constr = NULL,
-                               epsilon = 1e-15, maxit = 1000, maxrestarts=50, 
-                               fast=FALSE, ECM = FALSE,
-                               arbmean = TRUE, arbvar = TRUE)
-  
-  par(mfrow=c(1,2))
-  res.pca.all.sp.EG$CA$u[,1] = -res.pca.all.sp.EG$CA$u[,1]
-  res.pca.all.sp.EG$CA$v[,1] = -res.pca.all.sp.EG$CA$v[,1]
-  custom_pca(res.pca.all.sp.EG, centered = TRUE, 
-             vector.to.colour.col = bd.EG$Species1,
-             vector.to.colour.pch = bd.EG$Species1,
-             col.label = "black",
-             shape.points = c(19,22,23,24),
-             label.the.arrows = TRUE)
-  summary(res.pca.all.sp.EG)
-  round(scores(res.pca.all.sp.EG, choices = 1:3, display = "species", scaling = 0),2)
-  scores(res.pca.all.sp.EG, choices = 1:3, display = "species")
-  
-  res.pca.for$CA$u[,2] = -res.pca.for$CA$u[,2]
-  custom_pca(res.pca.for, centered = TRUE,
-             ordiellipse = TRUE,shape.points = 21,
-             ordiellipse.vector = ores$posterior[,1]>.95,
-             col.label = "black",
-             label.the.arrows = FALSE,
-             vector.names = c("Median Beak Length",
-                              "Median Beak Width",
-                              "Median Beak Depth"))
-  custom_pca(res.pca.for2, centered = TRUE,
-             ordiellipse = TRUE,shape.points = 21,
-             # ordiellipse.vector = ores$posterior[,1]>.95,
-             col.label = "black",
-             label.the.arrows = FALSE,
-             vector.names = c("Median Beak Length",
-                              "Median Beak Width",
-                              "Median Beak Depth"))
-  
-  pc1.raw=scores(res.pca.for3,choices = 1)
-  oorees = mixtools::normalmixEM(pc1.raw$sites,
-                                 # mu = c(center2,center1),
-                                 sigma = NULL, 
-                                 mean.constr = NULL, sd.constr = NULL,
-                                 epsilon = 1e-15, maxit = 1000, maxrestarts=50, 
-                                 # verb = TRUE, 
-                                 fast=FALSE, ECM = FALSE,
-                                 arbmean = TRUE, arbvar = TRUE)
-  res.pca.for3$CA$u[,2] = -res.pca.for3$CA$u[,2]
-  res.pca.for3$CA$v[,2] = -res.pca.for3$CA$v[,2]
-  custom_pca(res.pca.for3, centered = TRUE,
-             ordiellipse = TRUE,shape.points = 21,
-             ordiellipse.vector = oorees$posterior[,1]>.95,
-             col.label = "black",
-             label.the.arrows = FALSE,
-             vector.names = c("Median Beak Length",
-                              "Median Beak Width",
-                              "Median Beak Depth"))
-  summary(res.pca.for3)
-  round(scores(res.pca.for3, choices = 1:3, display = "species", scaling = 0),2)
-  scores(res.pca.for3, choices = 1:3, display = "species")
-  
-  # res.pcabs is found in load('./data/bird.data.RData', verbose=TRUE)
-  res.pcabs$CA$u[,1] = -res.pcabs$CA$u[,1]
-  custom_pca(res.pcabs, centered = TRUE, 
-             vector.to.colour.col = bird.data$Species1,
-             vector.to.colour.pch = bird.data$Species1,
-             col.label = "black",
-             shape.points = c(19,22,23,24),
-             label.the.arrows = TRUE)
-  summary(res.pcabs)
-  summary(res.pca.all.sp.EG)
-  dev.off()
-}
-
-
-if(pdf.output){
-  pdf(paste0("./output/my.fit.land.short2_jump",
+  pdf(paste0("output/my.fit.land.short2_jump",
              jump,"_",gsub('([[:punct:]])|\\s+','_',site.list),".pdf"),
       height = 7,
       width = 8)
@@ -169,31 +68,19 @@ if(find.peaks.and.valleys){
   for(i in 1:c(length(yr)-1)){
     yr.list <- c(yr[i],yr[i+jump])
     
-    ## If you want to try only fuliginosa, use only this species in the sp.list 
     mdat <- prep.data(sp.keep = sp.list,
-                      center = FALSE,
                       yr.keep = yr.list,
                       site.keep = site.list,
                       flip.pc1 = FALSE,
                       adults.only = FALSE, # If true, it'll keep only females and males (remove juveniles) 
-                      gr.sel = NULL,# "small" or "big", this is to create 2 groups in the fortis population. # applicable for fortis only. This will let you select "big" or "small" morph
-                      valley.fortis = FALSE, # If this is true, this term will find the valley (between the small morph of fortis and the big morph of fortis). You can run a model on these 2 after that
-                      valley.fortis.fuli = FALSE, # If this is true, this term will find the valley (between fuliginosa and the small morph of fortis). You can run a model on these 2 after that
-                      peaks.fortis.fuli = FALSE, # If this is true, this term will find the 2 peaks (of fuliginosa and the one for the small morph of fortis). You can run a model on these 2 after that
-                      two.univariate.traits = FALSE, # For spline, # For spline only. This is computing PC1 and PC2 as 2 independent univariate traits.
-                      keep.resid = FALSE, # FALSE if want to keep everything, # If this is true, it's going to keep the individuals that are putatively resident (==1)
-                      splines = splines,
                       keep.last.year.data = FALSE,
                       gam.analysis = TRUE,
-                      recalculate.pca = FALSE,
-                      pca.per.sp.only = TRUE,
-                      K.nots = 5, # Manually select the number of knots (for spline)
-                      traits = c('PC1')) # This is only for the spline 
+                      recalculate.pca = FALSE) 
 
     # This is to calcualte the GAM 
     # getting response variable and the explanatory variable 
     y = as.vector(mdat$X[,2])
-    x = c(mdat$ind.vars$pc1) # Works for everything execpt 2007-2008
+    x = cbind(mdat$ind.vars$pc1,mdat$ind.vars$pc2) # Works for everything execpt 2007-2008
     mbd = c(mdat$ind.vars$mbd) 
     mbl = c(mdat$ind.vars$mbl) 
     mbw = c(mdat$ind.vars$mbw) 
@@ -202,12 +89,37 @@ if(find.peaks.and.valleys){
     mydata = data.frame(x,y)
     dat.for.comparison.analysis = data.frame(x,y,year.var)
     full.data = c(full.data,list(dat.for.comparison.analysis))
+    # plot(mydata$X2,mydata$X1)
+    
+    categorical_interact <- gam(y~s(X1)+s(X2),
+                                sp = exp(c(-7,-7)),
+                                data=mydata, 
+                                family = binomial(link = "logit"))
+    categorical_interact_summary <- summary(categorical_interact)
+    # plot(categorical_interact,page=1)
+    open3d()
+    plot3d(x = mydata$X1, y = mydata$X2, mydata$y, #type="n",
+           xlab="PC1", ylab="PC2", zlab="Apparent Survival", 
+           main =paste("Fitness landscape",yr.list[2], sep =" "),
+           axes=TRUE, box=TRUE, aspect=1,col=ifelse(mydata$y, "orange", "blue"), 
+           size = 11)
+  
+    # vis.gam(categorical_interact,
+    #         view=c("X1","X2"),
+    #         theta=40,
+    #         # n.grid=500,
+    #         n.grid=50,
+    #         border=NA) 
+    # library(visreg)
+    # visreg(categorical_interact)
+    # library(mgcViz)
+    # car::scatter3d(y~X1+X2, data=mydata,fit=c("additive"),df.additive	 = 5)
     
     # Fitting the GAM 
-    z <- gam(y ~ s(x), 
+    z <- gam(y ~ s(X1), 
              data = mydata, 
              family = binomial(link = "logit"), # Logistic link 
-             sp = exp.lambda,
+             # sp = exp.lambda,
              method = "GCV.Cp")
     
     model.list = c(model.list,list(z))
@@ -226,13 +138,13 @@ if(find.peaks.and.valleys){
     lambb.z = round(log(exp.lambda))
     
     # Getting new x that is spaced evenly respecting the GAM function (fitness function) 
-    newx <- seq(from = min(mydata$x), 
-                to = max(mydata$x), 
+    newx <- seq(from = min(mydata$X1), 
+                to = max(mydata$X1), 
                 length.out = 2000)
     
     # Using the model to generate the new response variable 
     z1 <- predict(z, 
-                  newdata=list(x = newx), 
+                  newdata=list(X1 = newx), 
                   se.fit = TRUE)
     
     # This is the actual transformed data 
@@ -251,35 +163,35 @@ if(find.peaks.and.valleys){
     # Adding error 
     lines(newx, upper, lty = 2)
     lines(newx, lower, lty = 2)
-    
+  }
     # find the *minimum* of the fitness function from the gam by clicking on BOTH sides of the highest visible peak and  the minimum value between the 2 peaks (valley) in the GAM  
-    midd  = locator(n = 2)
+    # midd  = locator(n = 2)
     # Starting from the left side, click right around the maximum of the fitness function. This will find the maximum value 
-    peak  = locator(n = 4)
+    # peak  = locator(n = 4)
     # midd=NULL
     # This will extract the X values for the selections 
-    midd = midd$x
-    peak = peak$x
+    # midd = midd$x
+    # peak = peak$x
     # midd = readline(prompt="Enter middle to find local minima: ")
     
     # Here is the actual function that will find the maximum and minium 
-    local.min  = min(yhat[newx > midd[1] & newx < midd[2]])
-    local.max  = max(yhat[newx > midd[1] & newx < midd[2]])
+    # local.min  = min(yhat[newx > midd[1] & newx < midd[2]])
+    # local.max  = max(yhat[newx > midd[1] & newx < midd[2]])
     
     # make a database usign the 2 peaks 
-    local.max.peak1  = newx[which(yhat==max(yhat[newx > peak[1] & newx < peak[2]]))]
-    local.max.peak2  = newx[which(yhat==max(yhat[newx > peak[3] & newx < peak[4]]))]
+    # local.max.peak1  = newx[which(yhat==max(yhat[newx > peak[1] & newx < peak[2]]))]
+    # local.max.peak2  = newx[which(yhat==max(yhat[newx > peak[3] & newx < peak[4]]))]
     
     # Draw a diagnostic line to see that you've selected the mximium of an obserbed peak and the minimum of the valley 
-    abline(h = c(local.min, local.max), lty = 3)
+    # abline(h = c(local.min, local.max), lty = 3)
     # This is showing the 2 maximum values of the 2 peaks 
-    abline(v = c(local.max.peak1, local.max.peak2), lty = 3, col = "red")
+    # abline(v = c(local.max.peak1, local.max.peak2), lty = 3, col = "red")
     
     # This si a metric of the fitness function itself. That means that the highest fitness- the lowest fitness would be the fitness differential (if it exists)
-    midd.list = c(local.max - local.min)
+    # midd.list = c(local.max - local.min)
     
     # Make a record of all the expected response varaible from the evenly spaced X 
-    newlist = c(newlist, list(yhat))
+    # newlist = c(newlist, list(yhat))
     
     # Make a database for all these new varaibles 
     my.eco.evo.df=rbind(my.eco.evo.df,data.frame(mid = midd.list,
