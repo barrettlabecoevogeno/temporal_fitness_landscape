@@ -1,25 +1,16 @@
-library(aod)
-library(car)
+
+# Load libraries ----------------------------------------------------------
+
 library(data.table)
 library(dplyr)
-library(fields)
-library(klaR)
-library(lme4)
 library(lubridate)
 library(MASS)
 library(mgcv)
-library(moments)
-library(MuMIn)
-library(parallel)
-library(R2jags)
-library(R2ucare)
-library(rjags)
-library(sjPlot)
 library(tidyr)
 library(vegan)
-library(zoo)
-library(vcdExtra)
 
+
+# Source scripts ----------------------------------------------------------
 source('./scripts/analyses.R')
 source('./scripts/misc.R')
 source('./scripts/prep.data.R')
