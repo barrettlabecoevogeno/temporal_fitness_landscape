@@ -17,18 +17,7 @@
                       pca.per.sp.only = FALSE, # If TRUE, changes the PCA calculated across all years for all species to PCA calculated across all years for only 
                       K.nots=NULL,
                       traits) {
-    # To make some test
-    # sp.keep = sp.list <- c('fortis', "fuliginosa")
-    # yr.keep = yr.list <- 2003:2014
-    # setwd('~/Dropbox/finch_recap/v2')
-    # splines <- FALSE
-    # source('src/initialize.R')
-    # peaks.fortis.fuli = TRUE
     pca.recalc = NULL
-    ## ----------------------------------------------------------------------
-    ## load data (from .RData)
-    # load('data/data.RData', verbose=TRUE)
-    # I added other climate data 06 December 2017
     load('data/bird.data.RData', verbose=TRUE)
     
     # I decided to change the species for these guys because they don't cluster properly otherwise 
