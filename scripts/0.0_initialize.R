@@ -21,6 +21,8 @@ library(ggplot2)
 source('scripts/0.1_misc.R')
 # Load functions 
 source('./scripts/PCA_custom.R')
+source('scripts/custom_PCA.R')
+
 source("./scripts/logit.r")
 # Prepare data script 
 source('scripts/prep.data.R')

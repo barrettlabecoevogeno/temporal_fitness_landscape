@@ -18,8 +18,7 @@ library(tidyr)
 library(ggplot2)
 
 # Source scripts ----------------------------------------------------------
-source('scripts/custom_PCA.R')
-source('scripts/0.1_misc.R')
+source('scripts/0.0_initialize.R')
 
 # New dataset, or sorting informations ------------------------------------
 whole.data = read.csv(file = "data/raw_data/DF_1999-2019.csv", header = TRUE, sep = ",")
