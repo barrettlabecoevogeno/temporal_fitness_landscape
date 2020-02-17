@@ -5,11 +5,12 @@ prep.data <- function(sp.keep,
                       adults.only = FALSE, # If true, it'll keep only females and males (remove juveniles) 
                       keep.last.year.data = TRUE, # If you don't want to drop the individuals from the last year 
                       gam.analysis = FALSE,
-                      recalculate.pca = FALSE # Recalculating the PCA for the subsetted data
+                      recalculate.pca = FALSE, # Recalculating the PCA for the subsetted data
+                      data = NULL
                       ) {
-  load('data/bird.data.RData', verbose=TRUE)
+  # load('output/bird.data.RData', verbose=TRUE)
   # source('scripts/0.1_misc.R')
-  
+  bird.data = data
   if(adults.only){
     bird.data = bird.data[bird.data$age %in% c("f","m"),]
   }
@@ -32,7 +33,7 @@ prep.data <- function(sp.keep,
   
   ch <- colnames(bird.data)[colnames(bird.data) %in% paste('y', yr.keep, sep='.')]
   ## remove birds that were not observed in selected years
-  detected <- apply(bird.data[,ch], 1, sum)>0
+  detected <- apply(bird.data[,ch], 1, sum)>0 # The sum in row has to be greater than 0 
   bird.data <- bird.data[detected,]
   
   ## remove birds whose first capture date was in last year (drop a lot of captures in one year)
@@ -60,7 +61,7 @@ prep.data <- function(sp.keep,
     sd.scl.mbw  = sd(bird.data$MedianBeakWidth),
     sd.scl.mbd  = sd(bird.data$MedianBeakDepth))
   
-  list(X = as.matrix(bird.data[,ch]), 
+  list(X = as.matrix(bird.data$X.corr[,ch]), 
        first = bird.data$first, # vector of first occasion
        bir.d  = bird.data,
        ind.vars = ind.vars,
