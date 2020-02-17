@@ -13,7 +13,7 @@ load('output/bird.data.RData', verbose=TRUE)
 save.data = "./output/biotic.factors.on.survival_Andrew_meeting_changing_PCA_SCORE_for_only_fortis.RData"
 
 sp.list <- c("fortis", "fuliginosa", "magnirostris","scandens")
-yr = yr.list.subset
+yr = yr.list.subset[7:length(yr.list.subset)]
 jump = 1
 site.list <- "El Garrapatero"
 
@@ -67,12 +67,13 @@ par(mfrow=c(1,1))
 # will let you select what is the maximum and minimum of the function 
 plot.gam.cust <- function(mod,bss=NULL,title ="", bdr = TRUE) {
   kk.t=ifelse(kk==-1,"default",kk)
-  vis.gam(mod,view=c("X1","X2"), 
-          main = paste(title,"smooth type:",bss,"&",kk.t,"dim","s.par=",smooth.par,sep = " "),
+  vis.gam(mod,view=c("X1","X2"), main ="",
           color="heat",n.grid=50, type="link", plot.type="contour", nCol=50)
+  title(main = paste(title,"Type:",bss,"&",kk.t,"dimensions,","sp=",smooth.par,sep = " "),
+        cex.main = .8, col.main= "black")
   points(x = mydata$X1, y = mydata$X2, pch = 21, bg = mydata$sp, col = mydata$sp)
   points(x = mydata[mydata$y %in% 1 ,"X1"], y = mydata[mydata$y %in% 1 ,"X2"], pch = 21, bg = "yellow", col = "yellow", cex = .7) # plot only the one that survived
-  vis.gam(mod,view=c("X1","X2"),
+  vis.gam(mod,view=c("X1","X2"), main = "3D view",
           theta=40,phi=40,color="heat",n.grid=50, ticktype="detailed",type="link", plot.type="persp", border = bdr)
 }
 smooth.par = -7
@@ -85,8 +86,9 @@ kk = -1
 # CR?
 # CC?
 # CP?
-bssss = c("tp","ts","ds","cr","cc","ps","cp")
+bssss = c("tp","ts","ds") # "ps","cp","cc","cr", ()
 # if(find.peaks.and.valleys){
+pdf("~/Desktop/my.fit.test.pdf")
 for (j in 1:length(bssss)) {
   bss = bssss[j]
 
@@ -135,7 +137,7 @@ for (j in 1:length(bssss)) {
                                 data=mydata, 
                                 family = binomial(link = "logit"))
     kk.i = ifelse(kk==-1,-1,kk+2)
-    categorical_interact2 <- gam(y~s(X1, bs = bss, k = kk)+s(X2, bs = bss, k = kk)+s(X1,X2, bs = bss, k = kk.i),
+    categorical_interact2 <- gam(y~s(X1, bs = bss, k = kk) + s(X2, bs = bss, k = kk) + s(X1,X2, bs = bss, k = kk.i),
                                 sp = exp(rep(smooth.par,4)),
                                 data=mydata, 
                                 family = binomial(link = "logit"))
@@ -148,14 +150,16 @@ for (j in 1:length(bssss)) {
     print(summary(categorical_interact1))
     print(summary(categorical_interact2))
     summary(categorical_interact3)
-    plot.gam.cust(mod = categorical_interact1, bss = bss,title = "GAM PC1 & PC2")
-    plot.gam.cust(mod = categorical_interact2, bss = bss,title = "GAM interac. PC1 & PC2")
+    plot.gam.cust(mod = categorical_interact1, bss = bss,title = "GAM PC1-2,")
+    plot.gam.cust(mod = categorical_interact2, bss = bss,title = "Gam interac. PC1-2,")
     # plot.gam.cust(mod = categorical_interact3, bss = bss,title = "Tensor product smooths PC1 and 2")
     title(paste("Fitness landscape in year",paste(yr.list, collapse = " ")), line = -1.5, outer = TRUE)
     
   }
-  
 }
+dev.off()
+
+
     # open3d()
     # plot3d(x = mydata$X1, y = mydata$X2, mydata$y, #type="n",
     #        xlab="PC1", ylab="PC2", zlab="Apparent Survival", 
