@@ -76,7 +76,47 @@ plot.gam.cust <- function(mod,bss=NULL,title ="", bdr = TRUE) {
   vis.gam(mod,view=c("X1","X2"), main = "3D view",
           theta=40,phi=40,color="heat",n.grid=50, ticktype="detailed",type="link", plot.type="persp", border = bdr)
 }
-smooth.par = -7
+
+plot.gcv.score1 <- function(mod,data) {
+  lambda <- exp( seq(-20,10, by=.8))        # fit a range of lambdas >0
+  gcvscore <- sapply(lambda, function(lambda, data){
+    gam(y~s(X1, bs = bss, k = kk)+s(X2, bs = bss, k = kk), 
+        family = binomial(link = "logit"),
+        sp = lambda,
+        data=data, method="GCV.Cp")$gcv.ubre},
+    mydata)
+  
+  plot(log(lambda), gcvscore, type = "l", 
+       main = paste(yr.list[1], 
+                    yr.list[2],sep = "-"),
+       ylab ="GCV score",
+       xlab = "ln(lambda)")
+  abline(h = mod$gcv.ubre, 
+         v = log(mod$full.sp[1]),
+         lty = 3)
+}
+
+plot.gcv.score2 <- function(mod,data) {
+  lambda <- exp( seq(-20,10, by=.8))        # fit a range of lambdas >0
+  
+  gcvscore <- sapply(lambda, function(lambda, data){
+    gam(y~s(X1, bs = bss, k = kk) + s(X2, bs = bss, k = kk) + s(X1,X2, bs = bss, k = kk.i), 
+        family = binomial(link = "logit"),
+        sp = lambda,
+        data=mydata, method="GCV.Cp")$gcv.ubre},
+    mydata)
+  
+  plot(log(lambda), gcvscore, type = "l", 
+       main = paste(yr.list[1], 
+                    yr.list[2],sep = "-"),
+       ylab ="GCV score",
+       xlab = "ln(lambda)")
+  abline(h = mod$gcv.ubre, 
+         v = log(mod$full.sp[1]),
+         lty = 3)
+}
+
+smooth.par = NULL
 kk = -1
 # bss = "tp"  #c("tp","ts","ds","cr","cc","ps","cp", ### maybe
 # "cs", "sos","re","mrf","gp","so","sw","sf") ### NOPEEEE 
@@ -88,12 +128,16 @@ kk = -1
 # CP?
 bssss = c("tp","ts","ds") # "ps","cp","cc","cr", ()
 # if(find.peaks.and.valleys){
+raw.data = NULL
+model.list1 = NULL
+model.list2 = NULL
+
 pdf("~/Desktop/my.fit.test.pdf")
 for (j in 1:length(bssss)) {
   bss = bssss[j]
 
   for(i in 1:c(length(yr)-1)){
-    par(mfrow=c(2,2))
+    par(mfrow=c(2,3))
     
     yr.list <- c(yr[i],yr[i+jump])
     
@@ -128,7 +172,7 @@ for (j in 1:length(bssss)) {
     #                              data=mydata, 
     #                              family = binomial(link = "logit"))
     # 
-    
+    raw.data = c(raw.data,list(mydata))
     categorical_interact1 = NULL
     categorical_interact2 = NULL
     categorical_interact3 = NULL
@@ -141,6 +185,8 @@ for (j in 1:length(bssss)) {
                                 sp = exp(rep(smooth.par,4)),
                                 data=mydata, 
                                 family = binomial(link = "logit"))
+    model.list1 = c(model.list1, list(categorical_interact1))
+    model.list2 = c(model.list2, list(categorical_interact2))
       # categorical_interact3 <- gam(y~te(X1, bs = bss, k = kk) + te(X2, bs = bss, k = kk) + ti(X1,X2, bs = bss, k = kk),
       #                              sp = exp(rep(-7,4)),
       #                              data=mydata, 
@@ -151,9 +197,16 @@ for (j in 1:length(bssss)) {
     print(summary(categorical_interact2))
     summary(categorical_interact3)
     plot.gam.cust(mod = categorical_interact1, bss = bss,title = "GAM PC1-2,")
+    # FIND GCV SCORE 
+    plot.gcv.score1(mod = categorical_interact1,data = mydata)
+    
     plot.gam.cust(mod = categorical_interact2, bss = bss,title = "Gam interac. PC1-2,")
+    # FIND GCV SCORE 
+    plot.gcv.score2(mod = categorical_interact2,data = mydata)
+    
     # plot.gam.cust(mod = categorical_interact3, bss = bss,title = "Tensor product smooths PC1 and 2")
     title(paste("Fitness landscape in year",paste(yr.list, collapse = " ")), line = -1.5, outer = TRUE)
+    
     
   }
 }
