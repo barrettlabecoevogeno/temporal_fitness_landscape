@@ -5,10 +5,10 @@
 # Analysis of the dynamics of Darwin's finches' fitness landscapes  
 # # # # # # # # # # # # # # # # # # # # 
 
+
 # Preparation of variables and data  --------------------------------------
 source('scripts/0.0_initialize.R')
 load('output/bird.data.RData', verbose=TRUE)
-
 # Select the variables to run the scripts ---------------------------------
 save.data = "./output/biotic.factors.on.survival_Andrew_meeting_changing_PCA_SCORE_for_only_fortis.RData"
 
@@ -60,12 +60,39 @@ if(pdf.output){
       width = 8)
 }
 
+with(bird.data, table(Species1,Year))
 # Function finding maximum and minimum of the fitness function  -----------
 par(mfrow=c(1,1))
 # For loop that will calculate the GAM, show the landscape and 
 # will let you select what is the maximum and minimum of the function 
-if(find.peaks.and.valleys){
+plot.gam.cust <- function(mod,bss=NULL,title ="", bdr = TRUE) {
+  kk.t=ifelse(kk==-1,"default",kk)
+  vis.gam(mod,view=c("X1","X2"), 
+          main = paste(title,"smooth type:",bss,"&",kk.t,"dim","s.par=",smooth.par,sep = " "),
+          color="heat",n.grid=50, type="link", plot.type="contour", nCol=50)
+  points(x = mydata$X1, y = mydata$X2, pch = 21, bg = mydata$sp, col = mydata$sp)
+  points(x = mydata[mydata$y %in% 1 ,"X1"], y = mydata[mydata$y %in% 1 ,"X2"], pch = 21, bg = "yellow", col = "yellow", cex = .7) # plot only the one that survived
+  vis.gam(mod,view=c("X1","X2"),
+          theta=40,phi=40,color="heat",n.grid=50, ticktype="detailed",type="link", plot.type="persp", border = bdr)
+}
+smooth.par = -7
+kk = -1
+# bss = "tp"  #c("tp","ts","ds","cr","cc","ps","cp", ### maybe
+# "cs", "sos","re","mrf","gp","so","sw","sf") ### NOPEEEE 
+# ts?
+# ds?
+# tp?
+# CR?
+# CC?
+# CP?
+bssss = c("tp","ts","ds","cr","cc","ps","cp")
+# if(find.peaks.and.valleys){
+for (j in 1:length(bssss)) {
+  bss = bssss[j]
+
   for(i in 1:c(length(yr)-1)){
+    par(mfrow=c(2,2))
+    
     yr.list <- c(yr[i],yr[i+jump])
     
     mdat <- prep.data(sp.keep = sp.list,
@@ -75,7 +102,8 @@ if(find.peaks.and.valleys){
                       adults.only = FALSE, # If true, it'll keep only females and males (remove juveniles) 
                       keep.last.year.data = FALSE,
                       gam.analysis = TRUE,
-                      recalculate.pca = FALSE) 
+                      recalculate.pca = FALSE,
+                      data = bird.data) 
 
     # This is to calcualte the GAM 
     # getting response variable and the explanatory variable 
@@ -86,30 +114,59 @@ if(find.peaks.and.valleys){
     mbw = c(mdat$ind.vars$mbw) 
     band = as.character(mdat$ind.vars$band) 
     year.var = rep(yr.list[2],length(mdat$ind.vars$pc1))
-    mydata = data.frame(x,y)
+    sp.dat = mdat$ind.vars$sp
+    mydata = data.frame(x,y,sp = sp.dat)
     dat.for.comparison.analysis = data.frame(x,y,year.var)
     full.data = c(full.data,list(dat.for.comparison.analysis))
     # plot(mydata$X2,mydata$X1)
     
-    categorical_interact <- gam(y~s(X1)+s(X2),
-                                sp = exp(c(-7,-7)),
+
+    # categorical_interact2 <- gam(y~s(X1, bs = "ts", k = 10)+s(X2, bs = "ts", k = 10)+s(X1,X2, bs = "ts", k = 10+2),
+    #                              sp = exp(rep(-7,4)),
+    #                              data=mydata, 
+    #                              family = binomial(link = "logit"))
+    # 
+    
+    categorical_interact1 = NULL
+    categorical_interact2 = NULL
+    categorical_interact3 = NULL
+    categorical_interact1 <- gam(y~s(X1, bs = bss, k = kk)+s(X2, bs = bss, k = kk),
+                                sp = exp(rep(smooth.par,2)),
                                 data=mydata, 
                                 family = binomial(link = "logit"))
-    categorical_interact_summary <- summary(categorical_interact)
-    # plot(categorical_interact,page=1)
-    open3d()
-    plot3d(x = mydata$X1, y = mydata$X2, mydata$y, #type="n",
-           xlab="PC1", ylab="PC2", zlab="Apparent Survival", 
-           main =paste("Fitness landscape",yr.list[2], sep =" "),
-           axes=TRUE, box=TRUE, aspect=1,col=ifelse(mydata$y, "orange", "blue"), 
-           size = 11)
+    kk.i = ifelse(kk==-1,-1,kk+2)
+    categorical_interact2 <- gam(y~s(X1, bs = bss, k = kk)+s(X2, bs = bss, k = kk)+s(X1,X2, bs = bss, k = kk.i),
+                                sp = exp(rep(smooth.par,4)),
+                                data=mydata, 
+                                family = binomial(link = "logit"))
+      # categorical_interact3 <- gam(y~te(X1, bs = bss, k = kk) + te(X2, bs = bss, k = kk) + ti(X1,X2, bs = bss, k = kk),
+      #                              sp = exp(rep(-7,4)),
+      #                              data=mydata, 
+      #                              family = binomial(link = "logit"))
+      
+    
+    print(summary(categorical_interact1))
+    print(summary(categorical_interact2))
+    summary(categorical_interact3)
+    plot.gam.cust(mod = categorical_interact1, bss = bss,title = "GAM PC1 & PC2")
+    plot.gam.cust(mod = categorical_interact2, bss = bss,title = "GAM interac. PC1 & PC2")
+    # plot.gam.cust(mod = categorical_interact3, bss = bss,title = "Tensor product smooths PC1 and 2")
+    title(paste("Fitness landscape in year",paste(yr.list, collapse = " ")), line = -1.5, outer = TRUE)
+    
+  }
   
-    # vis.gam(categorical_interact,
-    #         view=c("X1","X2"),
-    #         theta=40,
-    #         # n.grid=500,
-    #         n.grid=50,
-    #         border=NA) 
+}
+    # open3d()
+    # plot3d(x = mydata$X1, y = mydata$X2, mydata$y, #type="n",
+    #        xlab="PC1", ylab="PC2", zlab="Apparent Survival", 
+    #        main =paste("Fitness landscape",yr.list[2], sep =" "),
+    #        axes=TRUE, box=TRUE, aspect=1,col=ifelse(mydata$y, "orange", "blue"), 
+    #        size = 11)
+  
+    vis.gam(categorical_interact,view=c("X1","X2"),theta=40,# n.grid=500,
+            n.grid=50,border=NA)
+    vis.gam(categorical_interact3,view=c("X1","X2"),theta=40,# n.grid=500,
+            n.grid=50)
     # library(visreg)
     # visreg(categorical_interact)
     # library(mgcViz)
