@@ -128,7 +128,6 @@ recap$first = apply(recap[,ch], 1, which.max)
 ## update "first" so that it correctly reflects selected years (other way of coding it )
 # recap$first <- apply(recap[,ch], 1, function(x) min(which(x==1)))
 
-cbind(test1,test2)
 # Creates column with the last instance of capture
 recap$last = apply(recap[,ch], 1, function(x) max(which(x==1))) 
 
@@ -146,6 +145,8 @@ ch.corr = known.state.cjs(datata2[,ch])
 # Make recapture history with one column name 
 datata2$X = as.matrix(datata2[,ch])
 datata2$X.corr = as.matrix(ch.corr)
+datata2$ch.corr = tidyr::unite(data = as.data.frame(datata2$X.corr), 
+                               col = ch, sep = "")
 
 # Create variable that shows the APPARENT SURVIVAL 
 datata2$maxseen.corr = apply(ch.corr,1,sum)
