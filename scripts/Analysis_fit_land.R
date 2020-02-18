@@ -116,8 +116,8 @@ plot.gcv.score2 <- function(mod,data) {
          lty = 3)
 }
 
-smooth.par = NULL
-kk = -1
+smooth.par = -7
+kk = 10
 # bss = "tp"  #c("tp","ts","ds","cr","cc","ps","cp", ### maybe
 # "cs", "sos","re","mrf","gp","so","sw","sf") ### NOPEEEE 
 # ts?
@@ -137,7 +137,7 @@ for (j in 1:length(bssss)) {
   bss = bssss[j]
 
   for(i in 1:c(length(yr)-1)){
-    par(mfrow=c(2,3))
+    par(mfrow=c(2,2))
     
     yr.list <- c(yr[i],yr[i+jump])
     
@@ -176,12 +176,12 @@ for (j in 1:length(bssss)) {
     categorical_interact1 = NULL
     categorical_interact2 = NULL
     categorical_interact3 = NULL
-    categorical_interact1 <- gam(y~s(X1, bs = bss, k = kk)+s(X2, bs = bss, k = kk),
+    categorical_interact1 <- gam(y~s(X1, bs = bss, k = kk) + s(X2, bs = bss, k = kk),
                                 sp = exp(rep(smooth.par,2)),
                                 data=mydata, 
                                 family = binomial(link = "logit"))
     kk.i = ifelse(kk==-1,-1,kk+2)
-    categorical_interact2 <- gam(y~s(X1, bs = bss, k = kk) + s(X2, bs = bss, k = kk) + s(X1,X2, bs = bss, k = kk.i),
+    categorical_interact2 <- gam(y~ s(X1, bs = bss, k = kk) + s(X2, bs = bss, k = kk) + s(X1, X2, bs = bss, k = kk.i),
                                 sp = exp(rep(smooth.par,4)),
                                 data=mydata, 
                                 family = binomial(link = "logit"))
@@ -198,11 +198,11 @@ for (j in 1:length(bssss)) {
     summary(categorical_interact3)
     plot.gam.cust(mod = categorical_interact1, bss = bss,title = "GAM PC1-2,")
     # FIND GCV SCORE 
-    plot.gcv.score1(mod = categorical_interact1,data = mydata)
+    # plot.gcv.score1(mod = categorical_interact1,data = mydata)
     
     plot.gam.cust(mod = categorical_interact2, bss = bss,title = "Gam interac. PC1-2,")
     # FIND GCV SCORE 
-    plot.gcv.score2(mod = categorical_interact2,data = mydata)
+    # plot.gcv.score2(mod = categorical_interact2,data = mydata)
     
     # plot.gam.cust(mod = categorical_interact3, bss = bss,title = "Tensor product smooths PC1 and 2")
     title(paste("Fitness landscape in year",paste(yr.list, collapse = " ")), line = -1.5, outer = TRUE)
