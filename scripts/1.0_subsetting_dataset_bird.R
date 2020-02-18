@@ -83,6 +83,7 @@ datata = whole.data %>%
                             "m?", "nestling"), # For the survival, I should also consider the individuals that were juveniles but became adults, but only taking the adult traits
                 Year %in% c(1999:2019),
                 !(BANDFINAL %in% ""), # Remove empty bands 
+                !(BANDFINAL %in% c("LF1441", "LF1442", "LF1443", "LF1444", "LF1451", "LF5192", "SH765_L")), # Remove some other weird ID
                 Site %in% c("El Garrapatero"), # Keep only 1 site
                 Species1 %in% c("fortis", 
                                 # "fortis;fuliginosa","fortis;magnirostris","fortis;scandens", 
