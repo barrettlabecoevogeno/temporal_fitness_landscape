@@ -9,11 +9,14 @@
 # Preparation of variables and data  --------------------------------------
 source('scripts/0.0_initialize.R')
 load('output/bird.data.RData', verbose=TRUE)
+table(bird.data$Species1,
+      bird.data$Year)
+
 # Select the variables to run the scripts ---------------------------------
 save.data = "./output/biotic.factors.on.survival_Andrew_meeting_changing_PCA_SCORE_for_only_fortis.RData"
 
 sp.list <- c("fortis", "fuliginosa", "magnirostris","scandens")
-yr = yr.list.subset[7:length(yr.list.subset)] # yr.list.subset[c(7,8,9,10,11,12,13,15,16)]
+yr = yr.list.subset[6:length(yr.list.subset)] # yr.list.subset[c(7,8,9,10,11,12,13,15,16)]
 jump = 1
 site.list <- "El Garrapatero"
 
