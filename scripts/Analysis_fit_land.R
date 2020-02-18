@@ -13,7 +13,7 @@ load('output/bird.data.RData', verbose=TRUE)
 save.data = "./output/biotic.factors.on.survival_Andrew_meeting_changing_PCA_SCORE_for_only_fortis.RData"
 
 sp.list <- c("fortis", "fuliginosa", "magnirostris","scandens")
-yr = yr.list.subset[7:length(yr.list.subset)]
+yr = yr.list.subset[7:length(yr.list.subset)] # yr.list.subset[c(7,8,9,10,11,12,13,15,16)]
 jump = 1
 site.list <- "El Garrapatero"
 
@@ -131,6 +131,10 @@ bssss = c("tp","ts","ds") # "ps","cp","cc","cr", ()
 raw.data = NULL
 model.list1 = NULL
 model.list2 = NULL
+plot(bird.data$PC2~bird.data$PC1, pch =".")
+text(bird.data[bird.data$PC2 >.5,"PC1"], bird.data[bird.data$PC2 >.5,"PC2"], 
+     labels = bird.data[bird.data$PC2 >.5,"BANDFINAL"], cex = .5)
+
 
 pdf("~/Desktop/my.fit.test.pdf")
 for (j in 1:length(bssss)) {
@@ -206,12 +210,26 @@ for (j in 1:length(bssss)) {
     
     # plot.gam.cust(mod = categorical_interact3, bss = bss,title = "Tensor product smooths PC1 and 2")
     title(paste("Fitness landscape in year",paste(yr.list, collapse = " ")), line = -1.5, outer = TRUE)
-    
-    
   }
 }
 dev.off()
 
+aic1 = lapply(model.list1, function(x) x$aic); which.min(unlist(aic1)); min(unlist(aic1))
+aic2 = lapply(model.list2, function(x) x$aic); which.min(unlist(aic2)); min(unlist(aic2))
+p.val.mod1.1 = lapply(model.list1, function(x) summary(x)$s.table[1,"p-value"])
+p.val.mod1.2 = lapply(model.list1, function(x) summary(x)$s.table[2,"p-value"])
+which(unlist(p.val.mod1.1) < 0.05)
+which(unlist(p.val.mod1.2) < 0.05)
+p.val.mod2.1 = lapply(model.list2, function(x) summary(x)$s.table[1,"p-value"])
+p.val.mod2.2 = lapply(model.list2, function(x) summary(x)$s.table[2,"p-value"])
+p.val.mod2.3 = lapply(model.list2, function(x) summary(x)$s.table[3,"p-value"])
+which(unlist(p.val.mod2.1) < 0.05)
+which(unlist(p.val.mod2.2) < 0.05)
+which(unlist(p.val.mod2.3) < 0.05)
+#Approximate significance of smooth terms:
+#         edf Ref.df Chi.sq p-value  
+#  s(X1) 6.710  7.771 17.213  0.0208 *
+#  s(X2) 7.156  7.960  9.359  0.3322  
 
     # open3d()
     # plot3d(x = mydata$X1, y = mydata$X2, mydata$y, #type="n",
@@ -220,10 +238,10 @@ dev.off()
     #        axes=TRUE, box=TRUE, aspect=1,col=ifelse(mydata$y, "orange", "blue"), 
     #        size = 11)
   
-    vis.gam(categorical_interact,view=c("X1","X2"),theta=40,# n.grid=500,
-            n.grid=50,border=NA)
-    vis.gam(categorical_interact3,view=c("X1","X2"),theta=40,# n.grid=500,
-            n.grid=50)
+    # vis.gam(categorical_interact,view=c("X1","X2"),theta=40,# n.grid=500,
+    #         n.grid=50,border=NA)
+    # vis.gam(categorical_interact3,view=c("X1","X2"),theta=40,# n.grid=500,
+    #         n.grid=50)
     # library(visreg)
     # visreg(categorical_interact)
     # library(mgcViz)
