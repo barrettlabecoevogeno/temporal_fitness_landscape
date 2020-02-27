@@ -15,7 +15,7 @@ table(bird.data$Species1,
 # Select the variables to run the scripts ---------------------------------
 save.data = "./output/biotic.factors.on.survival_Andrew_meeting_changing_PCA_SCORE_for_only_fortis.RData"
 
-sp.list <- c("fortis", "fuliginosa", "magnirostris","scandens")
+sp.list <- c("fortis", "fuliginosa", "scandens","magnirostris")
 yr = yr.list.subset[6:length(yr.list.subset)] # yr.list.subset[c(7,8,9,10,11,12,13,15,16)]
 jump = 1
 site.list <- "El Garrapatero"
@@ -68,7 +68,7 @@ with(bird.data, table(Species1,Year))
 par(mfrow=c(1,1))
 # For loop that will calculate the GAM, show the landscape and 
 # will let you select what is the maximum and minimum of the function 
-plot.gam.cust <- function(mod,bss=NULL,title ="", bdr = TRUE) {
+plot.gam.cust <- function(mod,bss=NULL,kk,title ="", bdr = TRUE) {
   kk.t=ifelse(kk==-1,"default",kk)
   vis.gam(mod,view=c("X1","X2"), main ="",
           color="heat",n.grid=50, type="link", plot.type="contour", nCol=50)
@@ -80,7 +80,7 @@ plot.gam.cust <- function(mod,bss=NULL,title ="", bdr = TRUE) {
           theta=40,phi=40,color="heat",n.grid=50, ticktype="detailed",type="link", plot.type="persp", border = bdr)
 }
 
-plot.gcv.score1 <- function(mod,data) {
+plot.gcv.score1 <- function(mod,data,bss,kk) {
   lambda <- exp( seq(-20,10, by=.8))        # fit a range of lambdas >0
   gcvscore <- sapply(lambda, function(lambda, data){
     gam(y~s(X1, bs = bss, k = kk)+s(X2, bs = bss, k = kk), 
@@ -99,7 +99,7 @@ plot.gcv.score1 <- function(mod,data) {
          lty = 3)
 }
 
-plot.gcv.score2 <- function(mod,data) {
+plot.gcv.score2 <- function(mod,data, bss,kk) {
   lambda <- exp( seq(-20,10, by=.8))        # fit a range of lambdas >0
   
   gcvscore <- sapply(lambda, function(lambda, data){
@@ -129,7 +129,7 @@ kk = 10
 # CR?
 # CC?
 # CP?
-bssss = c("tp","ts","ds") # "ps","cp","cc","cr", ()
+bssss = c("tp")#,"ts","ds") # "ps","cp","cc","cr", ()
 # if(find.peaks.and.valleys){
 raw.data = NULL
 model.list1 = NULL
@@ -138,13 +138,12 @@ plot(bird.data$PC2~bird.data$PC1, pch =".")
 text(bird.data[bird.data$PC2 >.5,"PC1"], bird.data[bird.data$PC2 >.5,"PC2"], 
      labels = bird.data[bird.data$PC2 >.5,"BANDFINAL"], cex = .5)
 
-
 pdf("~/Desktop/my.fit.test.pdf")
 for (j in 1:length(bssss)) {
   bss = bssss[j]
 
   for(i in 1:c(length(yr)-1)){
-    par(mfrow=c(2,2))
+    par(mfrow=c(3,2))
     
     yr.list <- c(yr[i],yr[i+jump])
     
@@ -172,42 +171,56 @@ for (j in 1:length(bssss)) {
     dat.for.comparison.analysis = data.frame(x,y,year.var)
     full.data = c(full.data,list(dat.for.comparison.analysis))
     # plot(mydata$X2,mydata$X1)
-    
+    if (length(which(table(mydata$sp,mydata$y)[,2] == 0)) > 0) {
+      rm.sp.name = names(which(table(mydata$sp,mydata$y)[,2] == 0))
+      mydata = droplevels(mydata[!(mydata$sp %in% rm.sp.name),])
+    }
+if (length(which(mydata$y == 1)) <5) {
+  next
+}
 
-    # categorical_interact2 <- gam(y~s(X1, bs = "ts", k = 10)+s(X2, bs = "ts", k = 10)+s(X1,X2, bs = "ts", k = 10+2),
-    #                              sp = exp(rep(-7,4)),
-    #                              data=mydata, 
-    #                              family = binomial(link = "logit"))
-    # 
     raw.data = c(raw.data,list(mydata))
     categorical_interact1 = NULL
     categorical_interact2 = NULL
     categorical_interact3 = NULL
+    
+    
+    cat("\n ---------- Iteration",i,"----------\n\n")
+    
+    # Model 1 
     categorical_interact1 <- gam(y~s(X1, bs = bss, k = kk) + s(X2, bs = bss, k = kk),
                                 sp = exp(rep(smooth.par,2)),
                                 data=mydata, 
                                 family = binomial(link = "logit"))
+    
+    # Model 2 
+    nb.par = length(unique(mydata$sp))
+    categorical_interact1.1 <- gam(y~s(X1, bs = bss, k = kk, by = sp) + s(X2, bs = bss, k = kk, by = sp),
+                                sp = exp(rep(smooth.par,2*nb.par)),
+                                data=mydata, 
+                                family = binomial(link = "logit"))
+    
     kk.i = ifelse(kk==-1,-1,kk+2)
-    categorical_interact2 <- gam(y~ s(X1, bs = bss, k = kk) + s(X2, bs = bss, k = kk) + s(X1, X2, bs = bss, k = kk.i),
-                                sp = exp(rep(smooth.par,4)),
+    # Model 3 
+    categorical_interact2 <- gam(y~ s(X1, X2, bs = bss, k = kk, by = sp),
+                                sp = exp(rep(smooth.par,2+nb.par)),
                                 data=mydata, 
                                 family = binomial(link = "logit"))
     model.list1 = c(model.list1, list(categorical_interact1))
     model.list2 = c(model.list2, list(categorical_interact2))
-      # categorical_interact3 <- gam(y~te(X1, bs = bss, k = kk) + te(X2, bs = bss, k = kk) + ti(X1,X2, bs = bss, k = kk),
-      #                              sp = exp(rep(-7,4)),
-      #                              data=mydata, 
-      #                              family = binomial(link = "logit"))
-      
     
     print(summary(categorical_interact1))
+    print(summary(categorical_interact1.1))
     print(summary(categorical_interact2))
     summary(categorical_interact3)
-    plot.gam.cust(mod = categorical_interact1, bss = bss,title = "GAM PC1-2,")
+    
+    # plot the models 
+    plot.gam.cust(mod = categorical_interact1,bdr = TRUE, bss = bss,kk = kk,title = "GAM PC1-2,")
+    plot.gam.cust(mod = categorical_interact1.1, bss = bss,kk = kk,title = "GAM by sp, PC1-2,")
     # FIND GCV SCORE 
     # plot.gcv.score1(mod = categorical_interact1,data = mydata)
     
-    plot.gam.cust(mod = categorical_interact2, bss = bss,title = "Gam interac. PC1-2,")
+    plot.gam.cust(mod = categorical_interact2, bss = bss,kk = kk,title = "Gam interac. PC1-2,")
     # FIND GCV SCORE 
     # plot.gcv.score2(mod = categorical_interact2,data = mydata)
     
