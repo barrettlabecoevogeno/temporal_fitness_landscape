@@ -23,6 +23,7 @@ source('scripts/0.1_misc.R')
 # Load functions 
 source('./scripts/PCA_custom.R')
 source('scripts/custom_PCA.R')
+source('scripts/functions/plot_gams.R')
 
 source("./scripts/logit.r")
 # Prepare data script 
