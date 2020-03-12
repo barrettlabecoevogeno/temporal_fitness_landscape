@@ -8,51 +8,19 @@
 
 # Preparation of variables and data  --------------------------------------
 source('scripts/0.0_initialize.R')
+source('scripts/functions/parameters.R')
+# Data
 load('output/bird.data.RData', verbose=TRUE)
+
+# look at the number of species in each year 
 table(bird.data$Species1,
       bird.data$Year)
 
-# Select the variables to run the scripts ---------------------------------
-save.data = "./output/biotic.factors.on.survival_Andrew_meeting_changing_PCA_SCORE_for_only_fortis.RData"
 
 sp.list <- c("fortis", "fuliginosa", "scandens","magnirostris")
-yr = yr.list.subset[6:length(yr.list.subset)] # yr.list.subset[c(7,8,9,10,11,12,13,15,16)]
+yr = yr.list.subset[7:length(yr.list.subset)] # yr.list.subset[c(7,8,9,10,11,12,13,15,16)]
 jump = 1
 site.list <- "El Garrapatero"
-
-pdf.output <- FALSE
-find.peaks.and.valleys = FALSE
-standard.ized = TRUE
-# If you want only the linear βX not the βx and γX^2
-linear.only = TRUE  
-# If you want orthogonal X values: BEWARE! This is not the same as modeling an ORTHOGONAL regression 
-orthogonal.x = FALSE
-
-# prepare the variables that I'm going to record while iterating 
-fit.grad.table = list()
-model.list.logistic = NULL
-pseudr = NULL
-gofitfit = NULL
-glm.model.list = NULL
-yearly.number.of.id = NULL
-all.ranges.x = NULL
-list.min.fit = NULL
-list.min.fit.trait = NULL
-original.x = NULL
-midd.list = NULL
-my.eco.evo.df = NULL
-full.data = NULL
-final.df.new.analysis = NULL
-newlist = list()
-oldxlist = list()
-oldzlist = list()
-old_beak_L_list = list()
-old_beak_W_list = list()
-old_beak_D_list = list()
-old_band_list = list()
-model.list = list()
-survived.list = list()
-
 # These were the relatively good values of lambda used 
 exp.lambda = exp(mean(c(-4)))
 
@@ -63,81 +31,22 @@ if(pdf.output){
       width = 8)
 }
 
-with(bird.data, table(Species1,Year))
 # Function finding maximum and minimum of the fitness function  -----------
 par(mfrow=c(1,1))
 # For loop that will calculate the GAM, show the landscape and 
 # will let you select what is the maximum and minimum of the function 
-plot.gam.cust <- function(mod,bss=NULL,kk,title ="", bdr = TRUE) {
-  kk.t=ifelse(kk==-1,"default",kk)
-  vis.gam(mod,view=c("X1","X2"), main ="",
-          color="heat",n.grid=50, type="link", plot.type="contour", nCol=50)
-  title(main = paste(title,"Type:",bss,"&",kk.t,"dimensions,","sp=",smooth.par,sep = " "),
-        cex.main = .8, col.main= "black")
-  points(x = mydata$X1, y = mydata$X2, pch = 21, bg = mydata$sp, col = mydata$sp)
-  points(x = mydata[mydata$y %in% 1 ,"X1"], y = mydata[mydata$y %in% 1 ,"X2"], pch = 21, bg = "yellow", col = "yellow", cex = .7) # plot only the one that survived
-  vis.gam(mod,view=c("X1","X2"), main = "3D view",
-          theta=40,phi=40,color="heat",n.grid=50, ticktype="detailed",type="link", plot.type="persp", border = bdr)
-}
-
-plot.gcv.score1 <- function(mod,data,bss,kk) {
-  lambda <- exp( seq(-20,10, by=.8))        # fit a range of lambdas >0
-  gcvscore <- sapply(lambda, function(lambda, data){
-    gam(y~s(X1, bs = bss, k = kk)+s(X2, bs = bss, k = kk), 
-        family = binomial(link = "logit"),
-        sp = lambda,
-        data=data, method="GCV.Cp")$gcv.ubre},
-    mydata)
-  
-  plot(log(lambda), gcvscore, type = "l", 
-       main = paste(yr.list[1], 
-                    yr.list[2],sep = "-"),
-       ylab ="GCV score",
-       xlab = "ln(lambda)")
-  abline(h = mod$gcv.ubre, 
-         v = log(mod$full.sp[1]),
-         lty = 3)
-}
-
-plot.gcv.score2 <- function(mod,data, bss,kk) {
-  lambda <- exp( seq(-20,10, by=.8))        # fit a range of lambdas >0
-  
-  gcvscore <- sapply(lambda, function(lambda, data){
-    gam(y~s(X1, bs = bss, k = kk) + s(X2, bs = bss, k = kk) + s(X1,X2, bs = bss, k = kk.i), 
-        family = binomial(link = "logit"),
-        sp = lambda,
-        data=mydata, method="GCV.Cp")$gcv.ubre},
-    mydata)
-  
-  plot(log(lambda), gcvscore, type = "l", 
-       main = paste(yr.list[1], 
-                    yr.list[2],sep = "-"),
-       ylab ="GCV score",
-       xlab = "ln(lambda)")
-  abline(h = mod$gcv.ubre, 
-         v = log(mod$full.sp[1]),
-         lty = 3)
-}
-
-smooth.par = -7
-kk = 10
+smooth.par = -8
+kk = 4
+bssss = c("tp","ts","ds") # "ps","cp","cc","cr", 
 # bss = "tp"  #c("tp","ts","ds","cr","cc","ps","cp", ### maybe
 # "cs", "sos","re","mrf","gp","so","sw","sf") ### NOPEEEE 
-# ts?
-# ds?
-# tp?
-# CR?
-# CC?
-# CP?
-bssss = c("tp")#,"ts","ds") # "ps","cp","cc","cr", ()
-# if(find.peaks.and.valleys){
-raw.data = NULL
-model.list1 = NULL
-model.list2 = NULL
-plot(bird.data$PC2~bird.data$PC1, pch =".")
+
+# plot the PCA of the species to diagnose which might need to be removed 
+plot(PC2~PC1, col = Species1, data = bird.data, pch =".")
 text(bird.data[bird.data$PC2 >.5,"PC1"], bird.data[bird.data$PC2 >.5,"PC2"], 
      labels = bird.data[bird.data$PC2 >.5,"BANDFINAL"], cex = .5)
 
+sp.list.sub = sp.list[1]
 pdf("~/Desktop/my.fit.test.pdf")
 for (j in 1:length(bssss)) {
   bss = bssss[j]
@@ -147,7 +56,7 @@ for (j in 1:length(bssss)) {
     
     yr.list <- c(yr[i],yr[i+jump])
     
-    mdat <- prep.data(sp.keep = sp.list,
+    mdat <- prep.data(sp.keep = sp.list.sub,
                       yr.keep = yr.list,
                       site.keep = site.list,
                       flip.pc1 = FALSE,
@@ -230,6 +139,10 @@ if (length(which(mydata$y == 1)) <5) {
 }
 dev.off()
 
+
+
+
+
 aic1 = lapply(model.list1, function(x) x$aic); which.min(unlist(aic1)); min(unlist(aic1))
 aic2 = lapply(model.list2, function(x) x$aic); which.min(unlist(aic2)); min(unlist(aic2))
 p.val.mod1.1 = lapply(model.list1, function(x) summary(x)$s.table[1,"p-value"])
@@ -311,8 +224,8 @@ which(unlist(p.val.mod2.3) < 0.05)
     # Adding error 
     lines(newx, upper, lty = 2)
     lines(newx, lower, lty = 2)
-  }
-    # find the *minimum* of the fitness function from the gam by clicking on BOTH sides of the highest visible peak and  the minimum value between the 2 peaks (valley) in the GAM  
+
+        # find the *minimum* of the fitness function from the gam by clicking on BOTH sides of the highest visible peak and  the minimum value between the 2 peaks (valley) in the GAM  
     # midd  = locator(n = 2)
     # Starting from the left side, click right around the maximum of the fitness function. This will find the maximum value 
     # peak  = locator(n = 4)
